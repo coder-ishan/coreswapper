@@ -10,10 +10,11 @@ from web3 import Web3, HTTPProvider
 from eth_account import Account
 from eth_typing import ChecksumAddress
 from hyperliquid.utils import constants
-import example_utils
+from . import example_utils
+
 
 # Initialize Web3
-RPC_URL = os.getenv('RPC_URL', 'https://rpc.hyperliquid.xyz/evm')
+RPC_URL = 'https://rpc.hyperliquid.xyz/evm'
 w3 = Web3(HTTPProvider(RPC_URL))
 
 # USDT Contract ABI (simplified for transfer function)
@@ -340,7 +341,7 @@ def send_ubtc_to_user(amount: float, to_address: str, private_key: str) -> Dict[
         ubtc_contract = w3.eth.contract(address=UBTC_CONTRACT_ADDRESS, abi=USDT_ABI)  # Using same ABI as USDT since both are ERC20
         
         # Convert amount to token's decimal places (assuming 6 decimals like USDT)
-        amount_wei = int(amount * (10 ** 6))  # Adjust decimal places if UBTC uses different decimals
+        amount_wei = int(amount * (10 ** 8))  # Adjust decimal places if UBTC uses different decimals
         
         # Get current nonce
         nonce = w3.eth.get_transaction_count(from_address)
@@ -465,4 +466,4 @@ async def execute_swap(data: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("examples.api:app", host="0.0.0.0", port=8000, reload=True)
