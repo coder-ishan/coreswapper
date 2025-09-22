@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeFi Nexus - Interactive Loop Interface</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0d1421 0%, #1a2332 25%, #0f2027 50%, #203a43 75%, #2c5364 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+            cursor: none;
+        }
+
+        /* Animated Background Canvas */
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.6;
+        }
+
+        /* Interactive Background Layers */
+        .floating-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(26, 188, 156, 0.4) 0%, rgba(52, 152, 219, 0.2) 50%, transparent 70%);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .orb:nth-child(1) {
+            width: 120px;
+            height: 120px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+            animation-duration: 12s;
+        }
+
+        .orb:nth-child(2) {
+            width: 80px;
+            height: 80px;
+            top: 60%;
+            right: 15%;
+            animation-delay: -3s;
+            animation-duration: 10s;
+        }
+
+        .orb:nth-child(3) {
+            width: 150px;
+            height: 150px;
+            bottom: 25%;
+            left: 20%;
+            animation-delay: -6s;
+            animation-duration: 14s;
+        }
+
+        .orb:nth-child(4) {
+            width: 100px;
+            height: 100px;
+            top: 15%;
+            right: 25%;
+            animation-delay: -9s;
+            animation-duration: 11s;
+        }
+
+        .orb:nth-child(5) {
+            width: 180px;
+            height: 180px;
+            top: 45%;
+            left: 60%;
+            animation-delay: -12s;
+            animation-duration: 16s;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0px) translateX(0px) scale(1); 
+                opacity: 0.3;
+            }
+            25% { 
+                transform: translateY(-30px) translateX(20px) scale(1.1); 
+                opacity: 0.6;
+            }
+            50% { 
+                transform: translateY(-20px) translateX(-15px) scale(0.9); 
+                opacity: 0.4;
+            }
+            75% { 
+                transform: translateY(10px) translateX(30px) scale(1.05); 
+                opacity: 0.5;
+            }
+        }
+
+        /* Enhanced Geometric Patterns */
+        .geometric-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -3;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(26, 188, 156, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(52, 152, 219, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(22, 160, 133, 0.12) 0%, transparent 60%),
+                linear-gradient(45deg, transparent 30%, rgba(26, 188, 156, 0.02) 50%, transparent 70%);
+        }
+
+        /* Premium Custom Cursor */
+        .cursor {
+            position: fixed;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            mix-blend-mode: screen;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid rgba(26, 188, 156, 0.6);
+            box-shadow: 
+                0 0 20px rgba(26, 188, 156, 0.4),
+                inset 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .cursor-trail {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: rgba(26, 188, 156, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.1s ease;
+        }
+
+        .cursor.hover {
+            transform: scale(1.8);
+            background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%);
+            border-color: rgba(231, 76, 60, 0.8);
+            box-shadow: 
+                0 0 30px rgba(231, 76, 60, 0.6),
+                inset 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .cursor.click {
+            transform: scale(0.9);
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            border-color: rgba(155, 89, 182, 0.8);
+        }
+        
+        /* Elegant Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+            backdrop-filter: blur(25px);
+            background: linear-gradient(135deg, 
+                rgba(20, 30, 48, 0.85) 0%, 
+                rgba(44, 62, 80, 0.80) 50%, 
+                rgba(20, 30, 48, 0.85) 100%);
+            border-radius: 28px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            margin-top: 30px;
+            margin-bottom: 40px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 28px;
+            padding: 2px;
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.4) 0%, 
+                rgba(52, 152, 219, 0.3) 25%,
+                rgba(155, 89, 182, 0.2) 50%,
+                rgba(22, 160, 133, 0.3) 75%,
+                rgba(26, 188, 156, 0.4) 100%);
+            background-size: 400% 400%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: subtract;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: subtract;
+            animation: borderFlow 6s linear infinite;
+        }
+
+        @keyframes borderFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container:hover {
+            box-shadow: 
+                0 30px 60px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(26, 188, 156, 0.15);
+        }
+        
+        /* Header with Teal Accent */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px 0;
+            border-bottom: 2px solid transparent;
+            background: linear-gradient(90deg, 
+                rgba(26, 188, 156, 0.3) 0%, 
+                rgba(52, 152, 219, 0.2) 50%, 
+                rgba(26, 188, 156, 0.3) 100%) 
+                bottom / 100% 2px no-repeat;
+            margin-bottom: 50px;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .brand-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 50%, #3498db 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            box-shadow: 
+                0 10px 30px rgba(26, 188, 156, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: iconPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { box-shadow: 0 10px 30px rgba(26, 188, 156, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+            50% { box-shadow: 0 15px 40px rgba(26, 188, 156, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+        }
+
+        .brand-icon::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.2), 
+                transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s ease;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: rotate(45deg) translateX(-200%); }
+            50% { transform: rotate(45deg) translateX(0%); }
+            100% { transform: rotate(45deg) translateX(200%); }
+        }
+
+        .brand-icon:hover {
+            transform: translateY(-3px) rotate(-2deg);
+            box-shadow: 
+                0 15px 40px rgba(26, 188, 156, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+        
+        .brand-text {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #1abc9c 50%, #3498db 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            animation: textShimmer 5s ease-in-out infinite;
+        }
+
+        @keyframes textShimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .brand-subtitle {
+            font-size: 15px;
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+            margin-top: 6px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+        
+        /* Wallet Section */
+        .wallet-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .wallet-address {
+            padding: 16px 28px;
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.15) 0%, 
+                rgba(52, 152, 219, 0.10) 100%);
+            border-radius: 16px;
+            border: 2px solid rgba(26, 188, 156, 0.4);
+            color: #ffffff;
+            backdrop-filter: blur(15px);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallet-address::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(26, 188, 156, 0.2), 
+                transparent);
+            transition: all 0.6s ease;
+        }
+
+        .wallet-address:hover::before {
+            left: 100%;
+        }
+
+        .wallet-address:hover {
+            border-color: rgba(52, 152, 219, 0.6);
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.2) 0%, 
+                rgba(52, 152, 219, 0.15) 100%);
+            transform: translateY(-1px);
+        }
+        
+        .connect-btn {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #e74c3c 0%, #f39c12 50%, #e67e22 100%);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            box-shadow: 
+                0 8px 25px rgba(231, 76, 60, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .connect-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.25), 
+                transparent);
+            transition: all 0.6s ease;
+        }
+        
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 12px 35px rgba(231, 76, 60, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .connect-btn:hover::before {
+            left: 100%;
+        }
+        
+        /* Enhanced Cards */
+        .config-card, .market-section, .execute-section {
+            background: linear-gradient(135deg, 
+                rgba(30, 45, 70, 0.9) 0%, 
+                rgba(44, 62, 80, 0.85) 50%, 
+                rgba(30, 45, 70, 0.9) 100%);
+            border-radius: 24px;
+            border: 2px solid transparent;
+            margin-bottom: 35px;
+            backdrop-filter: blur(25px);
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .config-card::before, .market-section::before, .execute-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            padding: 2px;
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.3) 0%, 
+                rgba(52, 152, 219, 0.2) 50%, 
+                rgba(155, 89, 182, 0.15) 100%);
+            background-size: 400% 400%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: subtract;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: subtract;
+            animation: cardBorder 8s linear infinite;
+        }
+
+        @keyframes cardBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .config-card:hover, .market-section:hover, .execute-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 20px 45px rgba(0, 0, 0, 0.4),
+                0 0 30px rgba(26, 188, 156, 0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 35px;
+            border-bottom: 2px solid transparent;
+            background: linear-gradient(90deg, 
+                rgba(26, 188, 156, 0.15) 0%, 
+                rgba(52, 152, 219, 0.1) 50%, 
+                rgba(155, 89, 182, 0.08) 100%) 
+                bottom / 100% 2px no-repeat;
+        }
+        
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, 
+                #e74c3c 0%, 
+                #f39c12 50%, 
+                #e67e22 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 8px 25px rgba(231, 76, 60, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            animation: iconFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .card-icon::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.2), 
+                transparent);
+            transform: rotate(45deg) translateX(-100%);
+            transition: all 0.6s ease;
+        }
+
+        .card-icon:hover::after {
+            transform: rotate(45deg) translateX(100%);
+        }
+
+        .card-icon:hover {
+            transform: scale(1.05) rotate(-3deg);
+        }
+        
+        .card-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+        
+        .card-subtitle {
+            font-size: 15px;
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 500;
+        }
+        
+        /* Enhanced Controls */
+        .controls-grid {
+            padding: 35px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+        
+        .control-group {
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.08) 0%, 
+                rgba(52, 152, 219, 0.05) 100%);
+            border-radius: 18px;
+            padding: 28px;
+            border: 2px solid transparent;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-group::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            padding: 2px;
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.4) 0%, 
+                rgba(52, 152, 219, 0.3) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: subtract;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: subtract;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .control-group:hover::before {
+            opacity: 1;
+        }
+        
+        .control-group:hover {
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.12) 0%, 
+                rgba(52, 152, 219, 0.08) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(26, 188, 156, 0.2);
+        }
+        
+        .control-label {
+            display: block;
+            color: #ffffff;
+            font-weight: 700;
+            margin-bottom: 16px;
+            font-size: 17px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .loop-input {
+            width: 100%;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.08) 0%, 
+                rgba(26, 188, 156, 0.05) 100%);
+            border: 2px solid rgba(26, 188, 156, 0.3);
+            border-radius: 14px;
+            color: white;
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .loop-input:focus {
+            outline: none;
+            border-color: rgba(52, 152, 219, 0.6);
+            box-shadow: 
+                0 0 0 4px rgba(52, 152, 219, 0.1),
+                0 4px 20px rgba(52, 152, 219, 0.2);
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.12) 0%, 
+                rgba(52, 152, 219, 0.08) 100%);
+        }
+        
+        /* Premium Slider */
+        .loop-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, 
+                rgba(26, 188, 156, 0.4) 0%, 
+                rgba(52, 152, 219, 0.6) 100%);
+            outline: none;
+            -webkit-appearance: none;
+            margin-bottom: 16px;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .loop-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%);
+            cursor: pointer;
+            box-shadow: 
+                0 4px 15px rgba(231, 76, 60, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .loop-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 
+                0 6px 25px rgba(231, 76, 60, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            color: rgba(26, 188, 156, 0.8);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        /* Enhanced Preview Section */
+        .preview-section {
+            margin: 35px;
+            padding: 35px;
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.12) 0%, 
+                rgba(52, 152, 219, 0.08) 50%, 
+                rgba(155, 89, 182, 0.06) 100%);
+            border-radius: 20px;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+        }
+
+        .preview-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 2px;
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.4) 0%, 
+                rgba(52, 152, 219, 0.3) 50%, 
+                rgba(155, 89, 182, 0.2) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: subtract;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: subtract;
+        }
+        
+        .preview-header {
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .preview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.08) 0%, 
+                rgba(26, 188, 156, 0.05) 100%);
+            border-radius: 14px;
+            border: 1px solid rgba(26, 188, 156, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .stat-item:hover {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.12) 0%, 
+                rgba(26, 188, 156, 0.08) 100%);
+            transform: translateY(-2px);
+            border-color: rgba(52, 152, 219, 0.4);
+            box-shadow: 0 8px 25px rgba(26, 188, 156, 0.15);
+        }
+        
+        .stat-label {
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .stat-value {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 18px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Market Section Styles */
+        .section-header {
+            padding: 35px;
+            border-bottom: 2px solid transparent;
+            background: linear-gradient(90deg, 
+                rgba(26, 188, 156, 0.1) 0%, 
+                rgba(52, 152, 219, 0.08) 50%, 
+                rgba(155, 89, 182, 0.06) 100%) 
+                bottom / 100% 2px no-repeat;
+        }
+        
+        .section-title {
+            font-size: 30px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #1abc9c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .section-description {
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 28px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .filter-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        .filter-select, .search-input {
+            padding: 14px 20px;
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.08) 0%, 
+                rgba(52, 152, 219, 0.05) 100%);
+            border: 2px solid rgba(26, 188, 156, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+        
+        .filter-select:focus, .search-input:focus {
+            outline: none;
+            border-color: rgba(52, 152, 219, 0.5);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .search-input {
+            min-width: 240px;
+        }
+        
+        /* Enhanced Table */
+        .market-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: transparent;
+        }
+        
+        .table-header th {
+            padding: 24px;
+            text-align: left;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 15px;
+            border-bottom: 2px solid rgba(26, 188, 156, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        
+        .table-row {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom: 1px solid rgba(26, 188, 156, 0.1);
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .table-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                rgba(26, 188, 156, 0.15) 0%, 
+                rgba(52, 152, 219, 0.08) 100%);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .table-row:hover::before {
+            width: 100%;
+        }
+        
+        .table-row:hover {
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.08) 0%, 
+                rgba(52, 152, 219, 0.05) 100%);
+        }
+        
+        .table-row.selected {
+            background: linear-gradient(135deg, 
+                rgba(52, 152, 219, 0.15) 0%, 
+                rgba(26, 188, 156, 0.1) 100%);
+            border-left: 4px solid #1abc9c;
+        }
+        
+        .table-cell {
+            padding: 24px;
+            color: #ffffff;
+            vertical-align: middle;
+        }
+        
+        .asset-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .asset-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 15px rgba(26, 188, 156, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .asset-icon:hover {
+            transform: rotate(8deg) scale(1.1);
+            box-shadow: 
+                0 6px 20px rgba(26, 188, 156, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        
+        .asset-symbol {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 17px;
+        }
+        
+        .ltv-badge {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(26, 188, 156, 0.3);
+        }
+        
+        .liquidity-amount {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 17px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .liquidity-token {
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 13px;
+            margin-top: 3px;
+            font-weight: 500;
+        }
+        
+        .apy-value {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            font-size: 20px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .select-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 6px 20px rgba(231, 76, 60, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .select-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.2), 
+                transparent);
+            transition: all 0.5s ease;
+        }
+        
+        .select-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 30px rgba(231, 76, 60, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .select-btn:hover::before {
+            left: 100%;
+        }
+        
+        .select-btn.selected {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            box-shadow: 
+                0 6px 20px rgba(26, 188, 156, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Premium Input Cards */
+        .amount-grid {
+            padding: 35px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 30px;
+        }
+        
+        .input-card {
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.05) 0%, 
+                rgba(52, 152, 219, 0.03) 100%);
+            border-radius: 18px;
+            padding: 28px;
+            border: 2px solid transparent;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            backdrop-filter: blur(15px);
+        }
+
+        .input-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            padding: 2px;
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.3) 0%, 
+                rgba(52, 152, 219, 0.2) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: subtract;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: subtract;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .input-card:hover::before {
+            opacity: 1;
+        }
+        
+        .input-card:hover {
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.08) 0%, 
+                rgba(52, 152, 219, 0.06) 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(26, 188, 156, 0.15);
+        }
+        
+        .input-label {
+            display: block;
+            color: #ffffff;
+            font-weight: 700;
+            margin-bottom: 16px;
+            font-size: 17px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .amount-input {
+            width: 100%;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.08) 0%, 
+                rgba(26, 188, 156, 0.05) 100%);
+            border: 2px solid rgba(26, 188, 156, 0.2);
+            border-radius: 14px;
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .amount-input:focus {
+            outline: none;
+            border-color: rgba(52, 152, 219, 0.6);
+            box-shadow: 
+                0 0 0 4px rgba(52, 152, 219, 0.1),
+                0 4px 20px rgba(52, 152, 219, 0.2);
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.12) 0%, 
+                rgba(52, 152, 219, 0.08) 100%);
+        }
+        
+        .input-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .max-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 
+                0 4px 15px rgba(231, 76, 60, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .max-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 
+                0 6px 20px rgba(231, 76, 60, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Premium Execute Section */
+        .execute-section {
+            padding: 35px;
+            text-align: center;
+        }
+        
+        .execute-preview {
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.08) 0%, 
+                rgba(52, 152, 219, 0.05) 100%);
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 35px;
+            border: 2px solid rgba(26, 188, 156, 0.2);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+        }
+        
+        .execute-title {
+            font-size: 26px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #1abc9c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 28px;
+        }
+        
+        .execute-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.08) 0%, 
+                rgba(26, 188, 156, 0.05) 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(26, 188, 156, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .detail-item:hover {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.12) 0%, 
+                rgba(26, 188, 156, 0.08) 100%);
+            border-color: rgba(52, 152, 219, 0.4);
+            box-shadow: 0 6px 20px rgba(26, 188, 156, 0.15);
+        }
+        
+        .detail-label {
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .detail-value {
+            color: #ffffff;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 17px;
+        }
+        
+        /* Ultimate Execute Button */
+        .execute-btn {
+            background: linear-gradient(135deg, 
+                #1abc9c 0%, 
+                #16a085 25%, 
+                #3498db 75%,
+                #2980b9 100%);
+            border: none;
+            border-radius: 18px;
+            color: white;
+            font-size: 20px;
+            font-weight: 800;
+            padding: 22px 55px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            min-width: 320px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 
+                0 12px 35px rgba(26, 188, 156, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .execute-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.2), 
+                transparent);
+            transition: all 0.8s ease;
+        }
+        
+        .execute-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 
+                0 18px 50px rgba(26, 188, 156, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .execute-btn:hover::before {
+            left: 100%;
+        }
+
+        .execute-btn:active {
+            transform: translateY(-1px) scale(1.01);
+        }
+        
+        /* Enhanced Status Messages */
+        .status-message {
+            margin-top: 25px;
+            padding: 18px 28px;
+            border-radius: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 15px;
+            backdrop-filter: blur(15px);
+        }
+        
+        .status-success {
+            background: linear-gradient(135deg, 
+                rgba(26, 188, 156, 0.15) 0%, 
+                rgba(52, 152, 219, 0.1) 100%);
+            border: 2px solid rgba(26, 188, 156, 0.4);
+            color: #1abc9c;
+        }
+        
+        .status-error {
+            background: linear-gradient(135deg, 
+                rgba(231, 76, 60, 0.15) 0%, 
+                rgba(192, 57, 43, 0.1) 100%);
+            border: 2px solid rgba(231, 76, 60, 0.4);
+            color: #e74c3c;
+        }
+        
+        .status-loading {
+            background: linear-gradient(135deg, 
+                rgba(52, 152, 219, 0.15) 0%, 
+                rgba(41, 128, 185, 0.1) 100%);
+            border: 2px solid rgba(52, 152, 219, 0.4);
+            color: #3498db;
+        }
+        
+        .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(52, 152, 219, 0.3);
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 15px;
+                padding: 20px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 25px;
+                text-align: center;
+            }
+            
+            .brand-text {
+                font-size: 26px;
+            }
+            
+            .controls-grid, .amount-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .market-table {
+                font-size: 13px;
+            }
+            
+            .table-cell {
+                padding: 15px 10px;
+            }
+            
+            .execute-btn {
+                min-width: 280px;
+                font-size: 18px;
+                padding: 18px 40px;
+            }
+        }
+
+        /* Clickable item enhancements */
+        .clickable-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .clickable-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .clickable-item:active {
+            transform: translateY(0px);
+        }
+
+        /* Smooth transitions for all interactive elements */
+        button, input, select, .table-row, .control-group, .input-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Add ripple animation CSS */
+        @keyframes ripple {
+            to {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="background-canvas"></canvas>
+    <div class="floating-orbs">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+    <div class="geometric-bg"></div>
+    
+    <div class="cursor"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="brand">
+                <div class="brand-icon clickable-item">⟐</div>
+                <div>
+                    <div class="brand-text">DeFi Nexus</div>
+                    <div class="brand-subtitle">Interactive Loop Protocol</div>
+                </div>
+            </div>
+            <div class="wallet-section">
+                <div id="walletAddress" class="wallet-address" style="display: none;"></div>
+                <button id="connectWallet" class="connect-btn clickable-item">Connect Wallet</button>
+            </div>
+        </header>
+
+        <!-- Loop Configuration -->
+        <div class="config-card">
+            <div class="card-header">
+                <div class="card-icon clickable-item">🔄</div>
+                <div>
+                    <div class="card-title">Loop Configuration</div>
+                    <div class="card-subtitle">Configure your premium borrowing strategy</div>
+                </div>
+            </div>
+            
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label class="control-label">Loop Iterations</label>
+                    <input type="number" class="loop-input" id="loopCount" value="3" min="1" max="10">
+                    <input type="range" class="loop-slider" id="loopSlider" min="1" max="10" value="3">
+                    <div class="slider-labels">
+                        <span>1</span>
+                        <span>10</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Target Leverage</label>
+                    <input type="number" class="loop-input" id="targetLeverage" value="2.5" min="1" max="5" step="0.1" readonly>
+                    <div class="slider-labels">
+                        <span>Auto-calculated</span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-section" id="loopPreview">
+                <div class="preview-header">
+                    📊 Strategy Preview
+                </div>
+                <div class="preview-stats">
+                    <div class="stat-item clickable-item">
+                        <span class="stat-label">Total Loops:</span>
+                        <span class="stat-value" id="previewLoops">3</span>
+                    </div>
+                    <div class="stat-item clickable-item">
+                        <span class="stat-label">Effective Leverage:</span>
+                        <span class="stat-value" id="previewLeverage">2.5x</span>
+                    </div>
+                    <div class="stat-item clickable-item">
+                        <span class="stat-label">Expected APY Boost:</span>
+                        <span class="stat-value" id="previewAPY">+4.2%</span>
+                    </div>
+                    <div class="stat-item clickable-item">
+                        <span class="stat-label">Risk Level:</span>
+                        <span class="stat-value" id="previewRisk">Medium</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Selection -->
+        <div class="market-section">
+            <div class="section-header">
+                <h2 class="section-title">Premium Markets</h2>
+                <p class="section-description">Select your preferred collateral and debt assets</p>
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label class="filter-label">Collateral:</label>
+                        <select class="filter-select" id="collateralFilter">
+                            <option value="All">All Assets</option>
+                            <option value="UBTC">UBTC</option>
+                            <option value="HYPE">HYPE</option>
+                            <option value="kHYPE">kHYPE</option>
+                            <option value="berHYPE">berHYPE</option>
+                            <option value="UETH">UETH</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Debt:</label>
+                        <select class="filter-select" id="debtFilter">
+                            <option value="All">All Assets</option>
+                            <option value="USDC">USDC</option>
+                            <option value="HYPE">HYPE</option>
+                            <option value="USDT0">USDT0</option>
+                            <option value="USDH">USDH</option>
+                        </select>
+                    </div>
+                    
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search premium markets...">
+                </div>
+            </div>
+
+            <table class="market-table">
+                <thead class="table-header">
+                    <tr>
+                        <th>Collateral Asset</th>
+                        <th>Debt Asset</th>
+                        <th>Max LTV</th>
+                        <th>Available Liquidity</th>
+                        <th></th>
+                        <th>Borrow APY</th>
+                    </tr>
+                </thead>
+                <tbody id="marketTableBody">
+                    <!-- Table rows populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Position Configuration -->
+        <div class="config-card" id="amountSection" style="display: none;">
+            <div class="card-header">
+                <div class="card-icon clickable-item">💰</div>
+                <div>
+                    <div class="card-title">Position Configuration</div>
+                    <div class="card-subtitle">Define your investment parameters</div>
+                </div>
+            </div>
+
+            <div class="amount-grid">
+                <div class="input-card">
+                    <label class="input-label">Collateral Amount</label>
+                    <input type="number" class="amount-input" id="collateralAmount" placeholder="0.0000" step="0.0001">
+                    <div class="input-footer">
+                        <span>Balance: <span id="collateralBalance">0.0000</span></span>
+                        <button class="max-btn clickable-item" onclick="setMaxCollateral()">MAX</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <label class="input-label">Target Borrow Amount</label>
+                    <input type="number" class="amount-input" id="borrowAmount" placeholder="0.0000" step="0.0001">
+                    <div class="input-footer">
+                        <span>Max Available: <span id="maxBorrowable">0.0000</span></span>
+                        <button class="max-btn clickable-item" onclick="setMaxBorrow()">MAX</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Execute Section -->
+        <div class="execute-section" id="executeSection" style="display: none;">
+            <div class="execute-preview">
+                <h3 class="execute-title">Strategy Summary</h3>
+                <div class="execute-details">
+                    <div class="detail-item clickable-item">
+                        <span class="detail-label">Selected Pair:</span>
+                        <span class="detail-value" id="selectedPair">-</span>
+                    </div>
+                    <div class="detail-item clickable-item">
+                        <span class="detail-label">Loop Count:</span>
+                        <span class="detail-value" id="finalLoopCount">-</span>
+                    </div>
+                    <div class="detail-item clickable-item">
+                        <span class="detail-label">Initial Collateral:</span>
+                        <span class="detail-value" id="finalCollateral">-</span>
+                    </div>
+                    <div class="detail-item clickable-item">
+                        <span class="detail-label">Total Borrowed:</span>
+                        <span class="detail-value" id="finalBorrow">-</span>
+                    </div>
+                    <div class="detail-item clickable-item">
+                        <span class="detail-label">Final Leverage:</span>
+                        <span class="detail-value" id="finalLeverage">-</span>
+                    </div>
+                    <div class="detail-item clickable-item">
+                        <span class="detail-label">Estimated Gas:</span>
+                        <span class="detail-value" id="estimatedGas">~$25.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="execute-btn clickable-item" id="executeBtn" onclick="executeLoopBorrow()">
+                Execute Strategy
+            </button>
+
+            <div id="statusMessage" class="status-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script>
+        // Interactive Background Animation
+        class InteractiveBackground {
+            constructor() {
+                this.canvas = document.getElementById('background-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.waves = [];
+                this.mouseX = 0;
+                this.mouseY = 0;
+                this.init();
+            }
+
+            init() {
+                this.resize();
+                this.createParticles();
+                this.createWaves();
+                this.animate();
+                
+                window.addEventListener('resize', () => this.resize());
+                document.addEventListener('mousemove', (e) => {
+                    this.mouseX = e.clientX;
+                    this.mouseY = e.clientY;
+                });
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            createParticles() {
+                for (let i = 0; i < 100; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        size: Math.random() * 3 + 1,
+                        speedX: (Math.random() - 0.5) * 0.5,
+                        speedY: (Math.random() - 0.5) * 0.5,
+                        hue: Math.random() * 60 + 160, // Teal range
+                        opacity: Math.random() * 0.8 + 0.2,
+                        pulse: Math.random() * 0.02 + 0.01
+                    });
+                }
+            }
+
+            createWaves() {
+                for (let i = 0; i < 3; i++) {
+                    this.waves.push({
+                        y: this.canvas.height * (0.2 + i * 0.3),
+                        length: 0.01 + i * 0.002,
+                        amplitude: 50 + i * 20,
+                        frequency: 0.002 + i * 0.001,
+                        phase: i * Math.PI / 3,
+                        opacity: 0.3 - i * 0.08
+                    });
+                }
+            }
+
+            animate() {
+                this.ctx.fillStyle = 'rgba(13, 20, 33, 0.05)';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw animated waves
+                this.waves.forEach((wave, index) => {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, wave.y);
+                    
+                    for (let x = 0; x < this.canvas.width; x += 5) {
+                        const y = wave.y + Math.sin(x * wave.length + wave.phase) * wave.amplitude;
+                        this.ctx.lineTo(x, y);
+                    }
+                    
+                    this.ctx.strokeStyle = `hsla(${170 + index * 15}, 70%, 60%, ${wave.opacity})`;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
+                    
+                    wave.phase += wave.frequency;
+                });
+
+                // Draw and animate particles
+                this.particles.forEach(particle => {
+                    // Update position
+                    particle.x += particle.speedX;
+                    particle.y += particle.speedY;
+                    
+                    // Mouse interaction
+                    const dx = this.mouseX - particle.x;
+                    const dy = this.mouseY - particle.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 100) {
+                        const force = (100 - distance) / 100;
+                        particle.x -= dx * force * 0.01;
+                        particle.y -= dy * force * 0.01;
+                    }
+                    
+                    // Boundary check
+                    if (particle.x < 0 || particle.x > this.canvas.width) particle.speedX *= -1;
+                    if (particle.y < 0 || particle.y > this.canvas.height) particle.speedY *= -1;
+                    
+                    // Update visual properties
+                    particle.opacity += Math.sin(Date.now() * particle.pulse) * 0.01;
+                    particle.size += Math.sin(Date.now() * particle.pulse * 0.5) * 0.1;
+                    
+                    // Draw particle
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    this.ctx.fillStyle = `hsla(${particle.hue}, 70%, 60%, ${particle.opacity})`;
+                    this.ctx.fill();
+                    
+                    // Add glow effect
+                    const gradient = this.ctx.createRadialGradient(
+                        particle.x, particle.y, 0,
+                        particle.x, particle.y, particle.size * 3
+                    );
+                    gradient.addColorStop(0, `hsla(${particle.hue}, 70%, 60%, ${particle.opacity * 0.8})`);
+                    gradient.addColorStop(1, 'transparent');
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size * 3, 0, Math.PI * 2);
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.fill();
+                });
+
+                // Draw connection lines between nearby particles
+                this.particles.forEach((particle, i) => {
+                    this.particles.slice(i + 1).forEach(otherParticle => {
+                        const dx = particle.x - otherParticle.x;
+                        const dy = particle.y - otherParticle.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 150) {
+                            const opacity = (150 - distance) / 150 * 0.2;
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(particle.x, particle.y);
+                            this.ctx.lineTo(otherParticle.x, otherParticle.y);
+                            this.ctx.strokeStyle = `hsla(180, 60%, 70%, ${opacity})`;
+                            this.ctx.lineWidth = 1;
+                            this.ctx.stroke();
+                        }
+                    });
+                });
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // Enhanced Cursor with better trail system
+        class EnhancedCursor {
+            constructor() {
+                this.cursor = document.querySelector('.cursor');
+                this.trails = [];
+                this.mouseX = 0;
+                this.mouseY = 0;
+                this.init();
+            }
+
+            init() {
+                // Create enhanced cursor trails
+                for (let i = 0; i < 15; i++) {
+                    const trail = document.createElement('div');
+                    trail.classList.add('cursor-trail');
+                    document.body.appendChild(trail);
+                    this.trails.push({
+                        element: trail,
+                        x: 0,
+                        y: 0,
+                        delay: i * 0.03
+                    });
+                }
+
+                this.setupEventListeners();
+                this.animate();
+            }
+
+            setupEventListeners() {
+                document.addEventListener('mousemove', (e) => {
+                    this.mouseX = e.clientX;
+                    this.mouseY = e.clientY;
+                });
+
+                document.addEventListener('mouseenter', () => {
+                    this.cursor.style.opacity = '1';
+                    this.trails.forEach(trail => {
+                        trail.element.style.opacity = '1';
+                    });
+                });
+
+                document.addEventListener('mouseleave', () => {
+                    this.cursor.style.opacity = '0';
+                    this.trails.forEach(trail => {
+                        trail.element.style.opacity = '0';
+                    });
+                });
+
+                // Enhanced hover effects
+                const hoverElements = document.querySelectorAll('button, .clickable-item, .table-row, a, input, select');
+                hoverElements.forEach(element => {
+                    element.addEventListener('mouseenter', () => {
+                        this.cursor.classList.add('hover');
+                    });
+
+                    element.addEventListener('mouseleave', () => {
+                        this.cursor.classList.remove('hover');
+                    });
+                });
+
+                document.addEventListener('mousedown', () => {
+                    this.cursor.classList.add('click');
+                });
+
+                document.addEventListener('mouseup', () => {
+                    this.cursor.classList.remove('click');
+                });
+            }
+
+            animate() {
+                // Update main cursor
+                this.cursor.style.left = this.mouseX - 12 + 'px';
+                this.cursor.style.top = this.mouseY - 12 + 'px';
+
+                // Update trails with smooth following
+                this.trails.forEach((trail, index) => {
+                    const targetX = this.mouseX - 4;
+                    const targetY = this.mouseY - 4;
+                    
+                    trail.x += (targetX - trail.x) * (0.15 - index * 0.008);
+                    trail.y += (targetY - trail.y) * (0.15 - index * 0.008);
+                    
+                    trail.element.style.left = trail.x + 'px';
+                    trail.element.style.top = trail.y + 'px';
+                    trail.element.style.opacity = (1 - index * 0.06) * 0.8;
+                    trail.element.style.transform = `scale(${1 - index * 0.04})`;
+                });
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // Sample borrowing data
+        const borrowingData = [
+            {
+                collateral: { symbol: 'UBTC', icon: '₿' },
+                debt: { symbol: 'USDC', icon: '$' },
+                maxLTV: '77.00%',
+                liquidity: { amount: '$70,857.74', token: '70,866.97 USDC' },
+                apy: '4.01%'
+            },
+            {
+                collateral: { symbol: 'kHYPE', icon: 'H' },
+                debt: { symbol: 'USDC', icon: '$' },
+                maxLTV: '62.50%',
+                liquidity: { amount: '$256,419.70', token: '256,453.10 USDC' },
+                apy: '4.65%'
+            },
+            {
+                collateral: { symbol: 'HYPE', icon: '⚡' },
+                debt: { symbol: 'USDC', icon: '$' },
+                maxLTV: '62.50%',
+                liquidity: { amount: '$85,870.32', token: '85,981.50 USDC' },
+                apy: '3.88%'
+            },
+            {
+                collateral: { symbol: 'berHYPE', icon: 'B' },
+                debt: { symbol: 'HYPE', icon: '⚡' },
+                maxLTV: '86.00%',
+                liquidity: { amount: '$1,124,851.42', token: '22,603.73 HYPE' },
+                apy: '1.68%'
+            },
+            {
+                collateral: { symbol: 'berHYPE', icon: 'B' },
+                debt: { symbol: 'USDT0', icon: 'T' },
+                maxLTV: '62.50%',
+                liquidity: { amount: '$491,346.18', token: '491,115.38 USDT0' },
+                apy: '2.45%'
+            },
+            {
+                collateral: { symbol: 'UETH', icon: 'Ξ' },
+                debt: { symbol: 'USDT0', icon: 'T' },
+                maxLTV: '77.00%',
+                liquidity: { amount: '$68,075.71', token: '68,043.73 USDT0' },
+                apy: '10.67%'
+            },
+            {
+                collateral: { symbol: 'UETH', icon: 'Ξ' },
+                debt: { symbol: 'USDH', icon: 'H' },
+                maxLTV: '77.00%',
+                liquidity: { amount: '$31,192.69', token: '31,178.04 USDH' },
+                apy: '22.85%'
+            },
+            {
+                collateral: { symbol: 'kHYPE', icon: 'H' },
+                debt: { symbol: 'HYPE', icon: '⚡' },
+                maxLTV: '86.00%',
+                liquidity: { amount: '$8,507,789.43', token: '172,475.58 HYPE' },
+                apy: '8.21%'
+            }
+        ];
+
+        // Premium Loop Borrow Manager
+        class PremiumLoopBorrowManager {
+            constructor() {
+                this.selectedPair = null;
+                this.collateralAmount = 0;
+                this.borrowAmount = 0;
+                this.loopCount = 3;
+                this.backendUrl = 'https://your-backend-api.com/api/loop-borrow';
+                this.provider = null;
+                this.signer = null;
+                this.userAddress = null;
+                this.init();
+            }
+
+            init() {
+                this.populateTable();
+                this.setupEventListeners();
+                this.updateLoopPreview();
+                this.checkWalletConnection();
+            }
+
+            setupEventListeners() {
+                document.getElementById('loopCount').addEventListener('input', (e) => {
+                    document.getElementById('loopSlider').value = e.target.value;
+                    this.loopCount = parseInt(e.target.value);
+                    this.updateLoopPreview();
+                });
+
+                document.getElementById('loopSlider').addEventListener('input', (e) => {
+                    document.getElementById('loopCount').value = e.target.value;
+                    this.loopCount = parseInt(e.target.value);
+                    this.updateLoopPreview();
+                });
+
+                document.getElementById('collateralFilter').addEventListener('change', () => this.filterTable());
+                document.getElementById('debtFilter').addEventListener('change', () => this.filterTable());
+                document.getElementById('searchInput').addEventListener('input', () => this.filterTable());
+
+                document.getElementById('collateralAmount').addEventListener('input', () => this.updateExecutePreview());
+                document.getElementById('borrowAmount').addEventListener('input', () => this.updateExecutePreview());
+
+                document.getElementById('connectWallet').addEventListener('click', () => this.connectWallet());
+            }
+
+            async checkWalletConnection() {
+                if (typeof window.ethereum !== 'undefined') {
+                    try {
+                        const accounts = await ethereum.request({ method: 'eth_accounts' });
+                        if (accounts.length > 0) {
+                            this.provider = new ethers.providers.Web3Provider(window.ethereum);
+                            this.signer = this.provider.getSigner();
+                            this.userAddress = accounts[0];
+                            this.updateBalances();
+                            this.updateWalletUI();
+                        }
+                    } catch (error) {
+                        console.error('Error checking wallet connection:', error);
+                    }
+                }
+            }
+
+            async connectWallet() {
+                if (typeof window.ethereum !== 'undefined') {
+                    try {
+                        await ethereum.request({ method: 'eth_requestAccounts' });
+                        this.provider = new ethers.providers.Web3Provider(window.ethereum);
+                        this.signer = this.provider.getSigner();
+                        this.userAddress = await this.signer.getAddress();
+                        this.updateBalances();
+                        this.updateWalletUI();
+                        this.showStatus('Premium wallet connected successfully!', 'success');
+                    } catch (error) {
+                        console.error('Error connecting wallet:', error);
+                        this.showStatus('Failed to connect wallet', 'error');
+                    }
+                } else {
+                    this.showStatus('Please install MetaMask to connect your wallet', 'error');
+                }
+            }
+
+            updateWalletUI() {
+                const walletAddressEl = document.getElementById('walletAddress');
+                walletAddressEl.textContent = `${this.userAddress.slice(0, 6)}...${this.userAddress.slice(-4)}`;
+                walletAddressEl.style.display = 'block';
+
+                const connectBtn = document.getElementById('connectWallet');
+                connectBtn.textContent = 'Connected';
+                connectBtn.disabled = true;
+                connectBtn.style.opacity = '0.7';
+            }
+
+            async updateBalances() {
+                if (!this.provider || !this.userAddress) return;
+
+                try {
+                    const balance = await this.provider.getBalance(this.userAddress);
+                    const ethBalance = parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
+                    document.getElementById('collateralBalance').textContent = `${ethBalance} ETH`;
+                } catch (error) {
+                    console.error('Error fetching balance:', error);
+                }
+            }
+
+            populateTable() {
+                const tbody = document.getElementById('marketTableBody');
+                tbody.innerHTML = '';
+
+                borrowingData.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'table-row';
+                    row.innerHTML = `
+                        <td class="table-cell">
+                            <div class="asset-info">
+                                <div class="asset-icon">${item.collateral.icon}</div>
+                                <span class="asset-symbol">${item.collateral.symbol}</span>
+                            </div>
+                        </td>
+                        <td class="table-cell">
+                            <div class="asset-info">
+                                <div class="asset-icon">${item.debt.icon}</div>
+                                <span>${item.debt.symbol}</span>
+                            </div>
+                        </td>
+                        <td class="table-cell">
+                            <span class="ltv-badge">${item.maxLTV}</span>
+                        </td>
+                        <td class="table-cell">
+                            <div class="liquidity-amount">${item.liquidity.amount}</div>
+                            <div class="liquidity-token">${item.liquidity.token}</div>
+                        </td>
+                        <td class="table-cell">
+                            <span class="apy-value">${item.apy}</span>
+                        </td>
+                        <td class="table-cell">
+                            <button class="select-btn" onclick="premiumManager.selectPair(${index})">
+                                Select
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            selectPair(index) {
+                document.querySelectorAll('.table-row').forEach(row => row.classList.remove('selected'));
+                document.querySelectorAll('.select-btn').forEach(btn => {
+                    btn.textContent = 'Select';
+                    btn.classList.remove('selected');
+                });
+
+                const rows = document.querySelectorAll('.table-row');
+                rows[index].classList.add('selected');
+                
+                const btn = rows[index].querySelector('.select-btn');
+                btn.textContent = 'Selected';
+                btn.classList.add('selected');
+
+                this.selectedPair = borrowingData[index];
+                
+                document.getElementById('amountSection').style.display = 'block';
+                document.getElementById('executeSection').style.display = 'block';
+                
+                this.updateExecutePreview();
+                this.showStatus('Premium market pair selected successfully!', 'success');
+            }
+
+            updateLoopPreview() {
+                const loops = this.loopCount;
+                const leverage = (1 + (loops - 1) * 0.5).toFixed(1);
+                const apyBoost = (loops * 1.4).toFixed(1);
+                const risk = loops <= 3 ? 'Low' : loops <= 6 ? 'Medium' : 'High';
+
+                document.getElementById('previewLoops').textContent = loops;
+                document.getElementById('previewLeverage').textContent = `${leverage}x`;
+                document.getElementById('previewAPY').textContent = `+${apyBoost}%`;
+                document.getElementById('previewRisk').textContent = risk;
+                document.getElementById('targetLeverage').value = leverage;
+            }
+
+            updateExecutePreview() {
+                if (!this.selectedPair) return;
+
+                const collateral = document.getElementById('collateralAmount').value || '0';
+                const borrow = document.getElementById('borrowAmount').value || '0';
+
+                document.getElementById('selectedPair').textContent = 
+                    `${this.selectedPair.collateral.symbol} → ${this.selectedPair.debt.symbol}`;
+                document.getElementById('finalLoopCount').textContent = this.loopCount;
+                document.getElementById('finalCollateral').textContent = `${collateral} ${this.selectedPair.collateral.symbol}`;
+                document.getElementById('finalBorrow').textContent = `${borrow} ${this.selectedPair.debt.symbol}`;
+                document.getElementById('finalLeverage').textContent = document.getElementById('targetLeverage').value + 'x';
+
+                const maxLTV = parseFloat(this.selectedPair.maxLTV.replace('%', '')) / 100;
+                const maxBorrowable = (parseFloat(collateral || 0) * maxLTV * 2450).toFixed(4);
+                document.getElementById('maxBorrowable').textContent = `${maxBorrowable} ${this.selectedPair.debt.symbol}`;
+            }
+
+            filterTable() {
+                const collateralFilter = document.getElementById('collateralFilter').value;
+                const debtFilter = document.getElementById('debtFilter').value;
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+                const rows = document.querySelectorAll('.table-row');
+                rows.forEach((row, index) => {
+                    const data = borrowingData[index];
+                    let visible = true;
+
+                    if (collateralFilter !== 'All' && data.collateral.symbol !== collateralFilter) {
+                        visible = false;
+                    }
+
+                    if (debtFilter !== 'All' && data.debt.symbol !== debtFilter) {
+                        visible = false;
+                    }
+
+                    if (searchTerm && 
+                        !data.collateral.symbol.toLowerCase().includes(searchTerm) &&
+                        !data.debt.symbol.toLowerCase().includes(searchTerm)) {
+                        visible = false;
+                    }
+
+                    row.style.display = visible ? 'table-row' : 'none';
+                });
+            }
+
+            async executeLoopBorrow() {
+                if (!this.selectedPair) {
+                    this.showStatus('Please select a premium borrowing pair first', 'error');
+                    return;
+                }
+
+                const collateralAmount = document.getElementById('collateralAmount').value;
+                const borrowAmount = document.getElementById('borrowAmount').value;
+
+                if (!collateralAmount || !borrowAmount || collateralAmount <= 0 || borrowAmount <= 0) {
+                    this.showStatus('Please enter valid amounts for both collateral and borrow', 'error');
+                    return;
+                }
+
+                if (!this.provider || !this.signer) {
+                    this.showStatus('Please connect your premium wallet first', 'error');
+                    return;
+                }
+
+                try {
+                    this.showStatus('Initializing premium loop borrowing strategy...', 'loading');
+
+                    const loopBorrowData = {
+                        userAddress: this.userAddress,
+                        strategy: {
+                            collateralAsset: this.selectedPair.collateral.symbol,
+                            debtAsset: this.selectedPair.debt.symbol,
+                            loopCount: this.loopCount,
+                            maxLTV: this.selectedPair.maxLTV,
+                            borrowAPY: this.selectedPair.apy
+                        },
+                        amounts: {
+                            collateralAmount: collateralAmount,
+                            borrowAmount: borrowAmount,
+                            leverageTarget: document.getElementById('targetLeverage').value
+                        },
+                        settings: {
+                            slippageTolerance: 0.5,
+                            deadline: Math.floor(Date.now() / 1000) + 1800,
+                            gasPrice: 'fast'
+                        }
+                    };
+
+                    this.showStatus('Transferring collateral to premium protocol...', 'loading');
+
+                    const tx = await this.signer.sendTransaction({
+                        to: '0x742C1D165327A28d2A02667Aa64e8EaC717Dd636',
+                        value: ethers.utils.parseEther(collateralAmount)
+                    });
+
+                    this.showStatus('Confirming premium transaction...', 'loading');
+                    await tx.wait();
+
+                    this.showStatus('Executing premium loop strategy...', 'loading');
+
+                    const response = await fetch(this.backendUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer your-auth-token`
+                        },
+                        body: JSON.stringify(loopBorrowData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Backend API Error: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    this.showStatus('🎉 Premium loop borrowing strategy executed successfully!', 'success');
+                    
+                    await this.updateBalances();
+                    document.getElementById('collateralAmount').value = '';
+                    document.getElementById('borrowAmount').value = '';
+
+                    console.log('Premium loop borrow result:', result);
+
+                } catch (error) {
+                    console.error('Premium loop borrow error:', error);
+                    this.showStatus(`Premium strategy execution failed: ${error.message}`, 'error');
+                }
+            }
+
+            showStatus(message, type) {
+                const statusEl = document.getElementById('statusMessage');
+                statusEl.innerHTML = type === 'loading' ? 
+                    `<span class="loading-spinner"></span>${message}` : 
+                    message;
+                statusEl.className = `status-message status-${type}`;
+                statusEl.style.display = 'flex';
+
+                if (type === 'success') {
+                    setTimeout(() => {
+                        statusEl.style.display = 'none';
+                    }, 5000);
+                }
+            }
+        }
+
+        // Utility Functions
+        function setMaxCollateral() {
+            const balance = document.getElementById('collateralBalance').textContent.split(' ')[0];
+            document.getElementById('collateralAmount').value = balance;
+            premiumManager.updateExecutePreview();
+        }
+
+        function setMaxBorrow() {
+            const maxBorrowable = document.getElementById('maxBorrowable').textContent.split(' ')[0];
+            document.getElementById('borrowAmount').value = maxBorrowable;
+            premiumManager.updateExecutePreview();
+        }
+
+        function executeLoopBorrow() {
+            premiumManager.executeLoopBorrow();
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new InteractiveBackground();
+            new EnhancedCursor();
+            window.premiumManager = new PremiumLoopBorrowManager();
+        });
+
+        // Enhanced interaction effects
+        document.addEventListener('DOMContentLoaded', () => {
+            const hoverElements = document.querySelectorAll('.clickable-item, button, .table-row, input, select');
+            
+            hoverElements.forEach(element => {
+                element.addEventListener('mouseenter', () => {
+                    element.style.transform = element.style.transform || '';
+                    if (!element.style.transform.includes('translateY')) {
+                        element.style.transform += ' translateY(-2px)';
+                    }
+                });
+
+                element.addEventListener('mouseleave', () => {
+                    element.style.transform = element.style.transform.replace(/translateY\([^)]*\)/g, '');
+                });
+            });
+
+            // Enhanced ripple effect
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('clickable-item') || e.target.tagName === 'BUTTON') {
+                    const ripple = document.createElement('span');
+                    const rect = e.target.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                    ripple.style.position = 'absolute';
+                    ripple.style.borderRadius = '50%';
+                    ripple.style.background = 'rgba(26, 188, 156, 0.4)';
+                    ripple.style.transform = 'scale(0)';
+                    ripple.style.animation = 'ripple 0.6s linear';
+                    ripple.style.pointerEvents = 'none';
+                    
+                    if (!e.target.style.position || e.target.style.position === 'static') {
+                        e.target.style.position = 'relative';
+                    }
+                    
+                    e.target.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                }
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                executeLoopBorrow();
+            }
+        });
+    </script>
+</body>
+</html>
