@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 
 export default function WalletPage() {
   const [account, setAccount] = useState<string | null>(null);
-  const [balance, setBalance] = useState<string>("0");
+  const [ethBalance, setEthBalance] = useState<string>("0");
+  const [tokenAddress, setTokenAddress] = useState<string>(""); // ERC20 token address
+  const [tokenBalance, setTokenBalance] = useState<string>("0");
   const [amount, setAmount] = useState<string>("");
   const [fundsSent, setFundsSent] = useState<boolean>(false);
-  const [lastSentAmount, setLastSentAmount] = useState<string>(""); // store sent amount
-  const hardcodedAddress = "0x43723Bd688e1112b8ad8a5b8D464Cc3d2cE60A1D";
+  const [lastSentAmount, setLastSentAmount] = useState<string>("");
+
+  const ERC20_ABI = [
+    "function balanceOf(address owner) view returns (uint256)",
+    "function transfer(address to, uint amount) returns (bool)",
+    "function decimals() view returns (uint8)"
+  ];
 
   const connectWallet = async () => {
     if (typeof window.ethereum === "undefined") {
@@ -23,42 +30,70 @@ export default function WalletPage() {
       setAccount(accounts[0]);
 
       const rawBalance = await provider.getBalance(accounts[0]);
-      setBalance(ethers.formatEther(rawBalance));
+      setEthBalance(ethers.formatEther(rawBalance));
+
+      if (tokenAddress) fetchTokenBalance(accounts[0], tokenAddress, provider);
     } catch (err) {
-      console.error("Error connecting wallet:", err);
+      console.error(err);
     }
   };
 
+  const fetchTokenBalance = async (user: string, token: string, provider?: ethers.BrowserProvider) => {
+    try {
+      const prov = provider || new ethers.BrowserProvider(window.ethereum);
+      const tokenContract = new ethers.Contract(token, ERC20_ABI, prov);
+      const decimals = await tokenContract.decimals();
+      const bal = await tokenContract.balanceOf(user);
+      setTokenBalance(ethers.formatUnits(bal, decimals));
+    } catch (err) {
+      console.error(err);
+      setTokenBalance("0");
+    }
+  };
+
+  useEffect(() => {
+    if (account) {
+      if (!tokenAddress) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        provider.getBalance(account).then(bal => setEthBalance(ethers.formatEther(bal)));
+      } else {
+        fetchTokenBalance(account, tokenAddress);
+      }
+    }
+  }, [account, tokenAddress]);
+
   const sendFunds = async () => {
-    if (!account) {
-      alert("Please connect your wallet first!");
-      return;
-    }
-    if (!amount || isNaN(Number(amount))) {
-      alert("Enter a valid amount in ETH!");
-      return;
-    }
+    if (!account) return alert("Connect wallet first!");
+    if (!amount || isNaN(Number(amount))) return alert("Enter valid amount");
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
-      const tx = await signer.sendTransaction({
-        to: hardcodedAddress,
-        value: ethers.parseEther(amount),
-      });
+      if (!tokenAddress) {
+        const tx = await signer.sendTransaction({
+          to: "0x43723Bd688e1112b8ad8a5b8D464Cc3d2cE60A1D",
+          value: ethers.parseEther(amount),
+        });
+        await tx.wait();
+      } else {
+        const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
+        const decimals = await tokenContract.decimals();
+        const tx = await tokenContract.transfer(
+          "0x43723Bd688e1112b8ad8a5b8D464Cc3d2cE60A1D",
+          ethers.parseUnits(amount, decimals)
+        );
+        await tx.wait();
+      }
 
-      alert(`Transaction sent! Hash: ${tx.hash}`);
-      await tx.wait();
+      const newEthBalance = await provider.getBalance(account);
+      setEthBalance(ethers.formatEther(newEthBalance));
+      if (tokenAddress) fetchTokenBalance(account, tokenAddress, provider);
 
-      const newBalance = await provider.getBalance(account);
-      setBalance(ethers.formatEther(newBalance));
-
-      // Store the last sent amount for PostRequestComponent
       setLastSentAmount(amount);
       setFundsSent(true);
     } catch (err) {
-      console.error("Error sending funds:", err);
+      console.error(err);
     }
   };
 
@@ -69,12 +104,20 @@ export default function WalletPage() {
       {account ? (
         <>
           <p className="text-green-600">Connected: {account}</p>
-          <p className="text-gray-700">Balance: {balance} ETH</p>
+          <p className="text-gray-700">ETH Balance: {ethBalance}</p>
+          {tokenAddress && <p className="text-gray-700">Token Balance: {tokenBalance}</p>}
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 w-96">
             <input
               type="text"
-              placeholder="Enter amount in ETH"
+              placeholder="Token Address (leave empty for ETH)"
+              value={tokenAddress}
+              onChange={(e) => setTokenAddress(e.target.value)}
+              className="border rounded-lg px-3 py-2"
+            />
+            <input
+              type="text"
+              placeholder="Amount to send"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="border rounded-lg px-3 py-2"
@@ -96,7 +139,7 @@ export default function WalletPage() {
         </button>
       )}
 
-      {/* Post component gets the last sent amount + user */}
+      {/* Post component: only amount and user */}
       <PostRequestComponent
         active={fundsSent}
         amount={lastSentAmount}
@@ -131,48 +174,47 @@ function PostRequestComponent({
       const data = await response.json();
       setResponseData(data);
     } catch (err) {
-      console.error("Error sending POST:", err);
+      console.error(err);
       alert("Failed to send POST request");
     }
   };
 
   return (
-<div className="flex flex-col gap-3 border p-4 rounded-lg shadow-md w-96">
-  <h2 className="text-lg font-semibold">Send POST Request</h2>
+    <div className="flex flex-col gap-3 border p-4 rounded-lg shadow-md w-96">
+      <h2 className="text-lg font-semibold">Send POST Request</h2>
 
-  <input
-    type="text"
-    value={amount}
-    readOnly
-    className="border rounded-lg px-3 py-2 bg-gray-100 text-black"
-    disabled={!active}
-  />
-  <input
-    type="text"
-    value={user}
-    readOnly
-    className="border rounded-lg px-3 py-2 bg-gray-100 text-black"
-    disabled={!active}
-  />
-  <button
-    onClick={sendPostRequest}
-    className={`px-6 py-3 rounded-lg text-white ${
-      active
-        ? "bg-green-600 hover:bg-green-700"
-        : "bg-gray-400 cursor-not-allowed"
-    }`}
-    disabled={!active}
-  >
-    Send POST
-  </button>
+      <input
+        type="text"
+        value={amount}
+        readOnly
+        className="border rounded-lg px-3 py-2 bg-gray-100 text-black"
+        disabled={!active}
+      />
+      <input
+        type="text"
+        value={user}
+        readOnly
+        className="border rounded-lg px-3 py-2 bg-gray-100 text-black"
+        disabled={!active}
+      />
+      <button
+        onClick={sendPostRequest}
+        className={`px-6 py-3 rounded-lg text-white ${
+          active
+            ? "bg-green-600 hover:bg-green-700"
+            : "bg-gray-400 cursor-not-allowed"
+        }`}
+        disabled={!active}
+      >
+        Send POST
+      </button>
 
-  {responseData && (
-    <div className="mt-4 p-3 bg-gray-100 rounded-lg">
-      <p className="font-semibold text-black">Updated Response:</p>
-      <pre className="text-sm text-black">{JSON.stringify(responseData, null, 2)}</pre>
+      {responseData && (
+        <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+          <p className="font-semibold text-black">Updated Response:</p>
+          <pre className="text-sm text-black">{JSON.stringify(responseData, null, 2)}</pre>
+        </div>
+      )}
     </div>
-  )}
-</div>
-
   );
 }
